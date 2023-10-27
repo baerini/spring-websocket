@@ -1,18 +1,25 @@
-package com.example.springwebsocket.dto;
+package com.example.springwebsocket.domain;
 
 import com.example.springwebsocket.service.ChatService;
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import lombok.Builder;
-import lombok.Data;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import org.springframework.web.socket.WebSocketSession;
 import java.util.HashSet;
 import java.util.Set;
 
+@Entity
 @Getter
 public class ChatRoom {
+    @Id @GeneratedValue
+    private Long id;
+
     private String roomId; // 채팅방 아이디
     private String name; // 채팅방 이름
+
+    @Transient
     private Set<WebSocketSession> sessions = new HashSet<>();
 
 //    @Builder
@@ -21,11 +28,11 @@ public class ChatRoom {
         this.name = name;
     }
 
-    public void handleAction(WebSocketSession session, ChatDTO chatContent, ChatService service) {
+    public void handleAction(WebSocketSession session, ChatMessage chatContent, ChatService service) {
         // message 에 담긴 타입을 확인한다.
         // 이때 message 에서 getType 으로 가져온 내용이
         // ChatDTO 의 열거형인 MessageType 안에 있는 ENTER 과 동일한 값이라면
-        if (chatContent.getType().equals(ChatDTO.MessageType.ENTER)) {
+        if (chatContent.getType().equals(ChatMessage.MessageType.ENTER)) {
             // sessions 에 넘어온 session 을 담고,
             sessions.add(session);
 

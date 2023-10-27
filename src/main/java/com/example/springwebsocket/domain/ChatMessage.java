@@ -1,18 +1,19 @@
-package com.example.springwebsocket.dto;
+package com.example.springwebsocket.domain;
 
-import lombok.Builder;
-import lombok.Data;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.Getter;
 import lombok.Setter;
 
 //@Data
 //@Builder
 @Getter @Setter
-public class ChatDTO {
+public class ChatMessage {
     public enum MessageType {
         ENTER, TALK
     }
 
+    @Enumerated(EnumType.STRING)
     private MessageType type;
     private String roomId;
     private String sender;

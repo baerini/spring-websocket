@@ -1,9 +1,11 @@
 package com.example.springwebsocket.service;
 
-import com.example.springwebsocket.dto.ChatRoom;
+import com.example.springwebsocket.domain.ChatRoom;
+import com.example.springwebsocket.repository.ChatRoomRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -15,9 +17,11 @@ import java.util.*;
 @Slf4j
 @Data
 @Service
+@RequiredArgsConstructor
 public class ChatService {
-    private final ObjectMapper mapper;
+    private ObjectMapper mapper;
     private Map<String, ChatRoom> chatRooms; // key: roomId, value: ChatRoom 객체
+    private final ChatRoomRepository chatRoomRepository;
 
     @PostConstruct
     private void init() {
@@ -41,6 +45,7 @@ public class ChatService {
 //                .name(name)
 //                .build();
         ChatRoom room = new ChatRoom(roomId, name);
+        chatRoomRepository.save(room);
 
         chatRooms.put(roomId, room); // 랜덤 아이디와 room 정보를 Map 에 저장
         return room;

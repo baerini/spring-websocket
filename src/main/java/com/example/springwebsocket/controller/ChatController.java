@@ -1,11 +1,9 @@
 package com.example.springwebsocket.controller;
 
-import com.example.springwebsocket.dto.ChatRoom;
+import com.example.springwebsocket.domain.ChatRoom;
 import com.example.springwebsocket.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -14,13 +12,8 @@ public class ChatController {
     private final ChatService chatService;
 
     @PostMapping
-    public ChatRoom createRoom(@RequestBody String name) {
+    public ChatRoom createRoom(@RequestParam String name) {
         return chatService.createRoom(name);
-    }
-
-    @GetMapping
-    public String chat() {
-        return "chat";
     }
 
 //    @GetMapping

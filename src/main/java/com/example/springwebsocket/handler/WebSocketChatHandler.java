@@ -1,7 +1,7 @@
 package com.example.springwebsocket.handler;
 
-import com.example.springwebsocket.dto.ChatDTO;
-import com.example.springwebsocket.dto.ChatRoom;
+import com.example.springwebsocket.domain.ChatMessage;
+import com.example.springwebsocket.domain.ChatRoom;
 import com.example.springwebsocket.service.ChatService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
         log.info("payload {}", payload);
 
         // mapper.readValue => 자바입장에서 읽겠다 (객체로 변환하겠다) => json->object
-        ChatDTO chatContent = mapper.readValue(payload, ChatDTO.class);
+        ChatMessage chatContent = mapper.readValue(payload, ChatMessage.class);
         log.info("session {}", chatContent.toString());
 
         ChatRoom room = service.findRoomById(chatContent.getRoomId());
