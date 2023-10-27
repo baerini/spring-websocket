@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+</head>
+<body>
+  <p>등록된 대화방 리스트</p>
+  <div th:each="chatRoom : ${chatRooms}">
+    채팅방id <div th:text="${chatRoom.roomId}"></div>
+    채팅방이름 <div th:text="${chatRoom.name}"></div>
+    <button th:onclick="|location.href='@{/chat/${chatRoom.name}}'|">방 입장</button>
+  </div>
+  <button onclick="location.href='chatAddForm.html'"
+          th:onclick="|location.href='@{/add}'|"
+          type="button">상품 등록</button>
+</body>
+</html>
