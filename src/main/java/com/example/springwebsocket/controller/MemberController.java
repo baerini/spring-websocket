@@ -43,7 +43,7 @@ public class MemberController {
                               @RequestParam String password) {
         List<Member> members = memberRepository.findByLoginIdAndPassword(loginId, password);
         if(members.size() == 1) {
-            return "chatRooms";
+            return "redirect:/chat";
         }
         return "redirect:/";
     }

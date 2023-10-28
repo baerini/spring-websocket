@@ -9,10 +9,9 @@
   <div th:each="chatRoom : ${chatRooms}">
     채팅방id <div th:text="${chatRoom.roomId}"></div>
     채팅방이름 <div th:text="${chatRoom.name}"></div>
-    <button th:onclick="|location.href='@{/chat/${chatRoom.name}}'|">방 입장</button>
+    <button th:onclick="|location.href='@{/chat/{name}(name=${chatRoom.name})}'|">방 입장</button>
   </div>
-  <button onclick="location.href='chatAddForm.html'"
-          th:onclick="|location.href='@{/add}'|"
+  <button th:onclick="|location.href='@{/chat/add}'|"
           type="button">상품 등록</button>
 </body>
 </html>
