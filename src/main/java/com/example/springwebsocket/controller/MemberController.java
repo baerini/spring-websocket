@@ -3,11 +3,15 @@ package com.example.springwebsocket.controller;
 import com.example.springwebsocket.domain.Member;
 import com.example.springwebsocket.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequiredArgsConstructor
+@Slf4j
 @RequestMapping("/members")
 public class MemberController {
 
@@ -28,6 +32,19 @@ public class MemberController {
         Member member = new Member(username, loginId, password);
         memberRepository.save(member);
 
+        return "redirect:/";
+    }
+
+    /**
+     * login post 전송처리
+     */
+    @PostMapping("/login")
+    public String loginMember(@RequestParam String loginId,
+                              @RequestParam String password) {
+        List<Member> members = memberRepository.findByLoginIdAndPassword(loginId, password);
+        if(members.size() == 1) {
+            return "chatRooms";
+        }
         return "redirect:/";
     }
 }
