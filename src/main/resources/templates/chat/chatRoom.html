@@ -3,18 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
-    <form name="publish">
-        <input type="text" name="message">
-        <input type="submit" value="전송">
-    </form>
+    <input type="text" id="msg" name="msg">
+    <input type="submit" id="send_button" value="전송">
+
+    <p id="here"></p>
 
     <script>
         let socket = new WebSocket("ws://localhost:8080/ws/chat");
-        socket.addEventListener("open", () => {
-          alert("WebSocket is open");
+        $( document ).ready(function() {
+            socket.onopen = function() {
+                alert("hello");
+                socket.send(JSON.stringify({
+                    "type":"ENTER",
+                    "roomId": "[[${roomId}]]",
+                    "sender":"[[${username}]]",
+                    "message": "null"
+                }));
+            }
+
+            socket.onmessage = function(event) {
+                let msg = JSON.parse(event.data);
+                alert(event.data);
+                alert(`${msg.message}`);
+                $("#here").append(`<p>${msg.sender} : ${msg.message}</p>`);
+            };
+
+            $("#send_button").on("click", function() {
+                let msg = $("#msg").val();
+                alert(msg);
+                if (msg.length !== 0) {
+                    socket.send(JSON.stringify({
+                        "type":"TALK",
+                        "roomId": "[[${roomId}]]",
+                        "sender":"[[${username}]]",
+                        "message": msg
+                    }));
+                }
+                $("#msg").val('');
+            });
+
         });
+
+
+        /*
+        $( document ).ready(function() {
+            let socket = new WebSocket("ws://localhost:8080/ws/chat");
+
+            socket.send(JSON.stringify({
+                "type":"ENTER",
+                "roomId": "[[${roomId}]]",
+                "sender":"[[${username}]]",
+                "message": "k"
+            }));
+
+            socket.onopen = function() {
+                $("#here").html("a");
+                $("#send_button").on("click", function() {
+
+                    if( $("#msg").val() !== 0 ) {
+                        socket.send(JSON.stringify({
+                            "type":"TALK",
+                            "roomId": "[[${roomId}]]",
+                            "sender":"[[${username}]]",
+                            "message": "k"
+                        }));
+                    }
+
+                    $("#msg").val('');
+                });
+            };
+
+            socket.onmessage = function(event) {
+
+            };
+
+            socket.onclose = function() {
+            };
+
+            socket.onerror = function() {
+            };
+        });
+
+        */
+
 
     </script>
 </body>

@@ -20,12 +20,13 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ChatService {
     private ObjectMapper mapper;
-    private Map<String, ChatRoom> chatRooms; // key: roomId, value: ChatRoom 객체
+    private Map<String, ChatRoom> chatRooms;
     private final ChatRoomRepository chatRoomRepository;
 
     @PostConstruct
     private void init() {
         chatRooms = new LinkedHashMap<>();
+        mapper = new ObjectMapper();
     }
 
     public List<ChatRoom> findAllRoom(){
@@ -34,6 +35,10 @@ public class ChatService {
 
     public ChatRoom findRoomById(String roomId){
         return chatRooms.get(roomId);
+    }
+
+    public ChatRoom findRoomByName(String name) {
+        return chatRoomRepository.findByName(name);
     }
 
     public ChatRoom createRoom(String name) {
