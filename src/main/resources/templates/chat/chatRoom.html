@@ -8,6 +8,7 @@
 <body>
     <input type="text" id="msg" name="msg">
     <input type="submit" id="send_button" value="전송">
+    <input type="submit" id="out_button" value="방 나가기">
 
     <p id="here"></p>
 
@@ -15,7 +16,6 @@
         let socket = new WebSocket("ws://localhost:8080/ws/chat");
         $( document ).ready(function() {
             socket.onopen = function() {
-                alert("hello");
                 socket.send(JSON.stringify({
                     "type":"ENTER",
                     "roomId": "[[${roomId}]]",
@@ -26,14 +26,19 @@
 
             socket.onmessage = function(event) {
                 let msg = JSON.parse(event.data);
-                alert(event.data);
-                alert(`${msg.message}`);
                 $("#here").append(`<p>${msg.sender} : ${msg.message}</p>`);
             };
 
+            socket.onclose = function(e) {
+                console.log('socket closed');
+            }
+
+            socket.onerror = function(e) {
+                console.log(e);
+            }
+
             $("#send_button").on("click", function() {
                 let msg = $("#msg").val();
-                alert(msg);
                 if (msg.length !== 0) {
                     socket.send(JSON.stringify({
                         "type":"TALK",
@@ -45,6 +50,15 @@
                 $("#msg").val('');
             });
 
+            $("#out_button").on("click", function() {
+                socket.send(JSON.stringify({
+                    "type":"LEAVE",
+                    "roomId": "[[${roomId}]]",
+                    "sender":"[[${username}]]",
+                    "message": "null"
+                }));
+                location.href="/chat";
+            });
         });
 
 
