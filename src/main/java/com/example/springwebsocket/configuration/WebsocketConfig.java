@@ -8,7 +8,7 @@ import org.springframework.web.socket.config.annotation.*;
 @Configuration
 @EnableWebSocket
 @RequiredArgsConstructor
-public class SpringConfig implements WebSocketConfigurer {
+public class WebsocketConfig implements WebSocketConfigurer {
 
     private final WebSocketHandler webSocketHandler;
 

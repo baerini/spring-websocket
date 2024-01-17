@@ -6,11 +6,10 @@ import com.example.springwebsocket.service.GameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequiredArgsConstructor
-public class TestController {
+public class GameController {
     private final GameService gameService;
     private final SecurityService securityService;
 
