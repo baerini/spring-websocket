@@ -1,10 +1,160 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
 </head>
 <body>
-  here lobby;
+체스 이미지
+<ul>
+    <div th:object="${member}">
+        <div>username <span th:text="*{username}"></span></div>
+        <div>rating <span th:text="*{rating}"></span></div>
+        <div>win <span th:text="*{win}"></span></div>
+        <div>lose <span th:text="*{lose}"></span></div>
+    </div>
+
+    <li>
+        <span>시간 설정</span>
+        <select id="time">
+            <option>10</option>
+            <option>15</option>
+            <option>30</option>
+        </select>
+        <div id="match_tag">
+            <button id="match"> 매치메이킹 시작 </button>
+        </div>
+    </li>
+    <li><button> 랭킹 조회 </button></li>
+    <li><button> 친구 목록 </button></li>
+    <li><button> 히스토리 </button></li>
+
+    <table id="matchList" border="1">
+        <tr>
+            <th>No</th>
+            <th>Username</th>
+            <th>Rating</th>
+            <th>Time</th>
+        </tr>
+
+<!--        <tr th:each="event , index: ${events}">-->
+<!--            <td th:text="${index.index}">#</td>-->
+<!--            <td th:text="${event.name}">이벤트 이름</td>-->
+<!--            <td th:text="${event.limitOfEnrollment}">100</td>-->
+<!--            <td th:text="${event.startDateTime}">2019년 1월 10일 오전 10시</td>-->
+<!--        </tr>-->
+    </table>
+
+    <script th:inline="javascript">
+        let match = document.getElementById("match");
+        match.onclick = function() {
+            let parent = document.getElementById("match_tag")
+            parent.innerHTML = "";
+
+            let child = document.createElement('button');
+            child.innerHTML += '<span> 매칭 중 </span>';
+            parent.appendChild(child);
+
+            let time_select = document.getElementById("time");
+            let time = time_select.options[time_select.selectedIndex].text
+
+            let socket = new WebSocket("ws://localhost:8080/ws/chat");
+            let member = [[${member}]];
+            let table = document.getElementById('matchList');
+
+            $.ajax({
+                type: "GET",
+                url: "/hello",
+                data: {},
+                success: function (response) {
+                    let n = response['count'];
+                    let arr = response['data'];
+
+                    for(let i = 0; i < n; i++) {
+                        console.log(arr[i]);
+
+                        // 새 행(Row) 추가
+                        let newRow = table.insertRow();
+
+                        // 새 행(Row)에 Cell 추가
+                        let newCell1 = newRow.insertCell(0);
+                        let newCell2 = newRow.insertCell(1);
+                        let newCell3 = newRow.insertCell(2);
+                        let newCell4 = newRow.insertCell(3);
+
+                        // Cell에 텍스트 추가
+                        newCell1.innerText = (i+1).toString();
+                        newCell2.innerText = arr[i]['member'].username;
+                        newCell3.innerText = arr[i]['member'].rating;
+                        newCell4.innerText = arr[i]['time'];
+                    }
+                },
+            });
+
+            socket.onopen = function(e) {
+                console.log("connection open");
+                socket.send(JSON.stringify({
+                    "gameId" : Number(time), //시간으로 바꾸기
+                    "sender" : member.username,
+                    "type" : "MATCH",
+                    "message": JSON.stringify(member)
+                }));
+            };
+
+            socket.onmessage = function(event) {
+                let msg = JSON.parse(event.data);
+                console.log(msg);
+                let sender = JSON.parse(msg.message);
+
+                if(msg.type == "MATCH") {
+                    let idx = 1;
+                    if(table.rows.length > 1) {
+                        let lastRow = table.rows[table.rows.length - 1];
+                        let firstCol = lastRow.cells[0].innerText;
+                        idx = Number(firstCol) + 1;
+                    }
+                    console.log(table.rows.length);
+                    console.log(idx);
+
+                    // 새 행(Row) 추가
+                    let newRow = table.insertRow();
+
+                    // 새 행(Row)에 Cell 추가
+                    let newCell1 = newRow.insertCell(0);
+                    let newCell2 = newRow.insertCell(1);
+                    let newCell3 = newRow.insertCell(2);
+                    let newCell4 = newRow.insertCell(3);
+
+                    // Cell에 텍스트 추가
+                    newCell1.innerText = idx.toString();
+                    newCell2.innerText = sender.username;
+                    newCell3.innerText = sender.rating;
+                    newCell4.innerText = Number(msg.gameId);
+                }
+
+                if(msg.type == "MATCHED") {
+                    let arr = msg.message.split('|');
+                    let color = arr[0];
+                    let time = Number(arr[1]);
+
+                    // url 바로 옮겨버리면 session remove 하기 전에 url 옮겨서 error
+                    // 한번 더 sign 줘야함
+                    socket.close();
+                    location.href= `/game?gameId=${msg.gameId}&color=${color}&time=${time}`;
+                }
+            };
+
+            socket.onclose = function(event) {
+                console.log("connection closed");
+            };
+
+            socket.onerror = function(error) {
+                console.log("connection error");
+            };
+        };
+    </script>
+</ul>
+<script type="text/javascript" src="http://code.jquery.com/jquery-3.5.1.min.js"></script>
 </body>
 </html>

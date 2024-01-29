@@ -14,6 +14,7 @@ public class ReviewController {
 
     @PostMapping
     public ResponseEntity<String> writeReview(Authentication authentication) {
+        log.info("authentication = {}",  authentication);
         return ResponseEntity.ok().body(authentication.getName() + "님이 리뷰 등록이 완료되었습니다.");
     }
 }

@@ -12,7 +12,7 @@ public class UserService {
 
     private Long expiredMs = 1000 * 60 * 60l;
 
-    public String login(String userName, String password) {
-        return JwtUtil.createJwt(userName, secretKey, expiredMs);
+    public String login(String username, String password) {
+        return JwtUtil.createJwt(username, secretKey, expiredMs);
     }
 }

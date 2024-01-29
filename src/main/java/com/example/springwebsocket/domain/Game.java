@@ -20,8 +20,13 @@ public class Game {
     @Id @GeneratedValue
     private Long id;
 
+    //time
+    //winner - username
+    //loser - username
+    //state 끝남 안끝남
+
     @Transient
-    private Set<WebSocketSession> sessions = new HashSet<>();
+    private Set<WebSocketSession> matchedSessions = new HashSet<>();
 
     public Game() {}
 }

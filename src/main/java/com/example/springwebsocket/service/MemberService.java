@@ -1,5 +1,6 @@
 package com.example.springwebsocket.service;
 
+import com.example.springwebsocket.domain.Member;
 import com.example.springwebsocket.repository.MemberRepository;
 import com.example.springwebsocket.utils.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -17,5 +18,9 @@ public class MemberService {
     public String login(String username, String password) {
         Long expiredMs = 1000 * 60 * 60l;
         return JwtUtil.createJwt(username, secretKey, expiredMs);
+    }
+
+    public Member findByUsername(String username) {
+        return memberRepository.findByUsername(username);
     }
 }

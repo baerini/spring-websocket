@@ -9,7 +9,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.Response;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,18 +36,25 @@ public class MemberController {
                                @RequestParam String password,
                                HttpServletResponse response) {
         Member member = memberRepository.findByLoginIdAndPassword(loginId, password);
-        String jwt = userService.login(loginId, "");
+        String jwt = userService.login(member.getUsername(), "");
         log.info("발급할 jwt = {}", jwt);
 
-        Cookie cookie = new Cookie("jwt-token", jwt);
+//        ResponseCookie authorization = ResponseCookie
+//                .from("authorization", jwt)
+//                .path("/")
+//                .httpOnly(true)
+//                .maxAge(3600)
+//                .sameSite("Lax")
+//                .build();
+//
+//        response.addHeader("Set-Cookie", authorization.toString());
+        Cookie cookie = new Cookie("jwt", "Bearer+" + jwt);
+        cookie.setMaxAge(3600);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
         response.addCookie(cookie);
 
-        return "redirect:/members/lobby";
-    }
-
-    @GetMapping("/lobby")
-    public String lobby() {
-        return "lobby";
+        return "redirect:/lobby";
     }
 
     @GetMapping("/add")

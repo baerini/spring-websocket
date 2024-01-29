@@ -20,6 +20,6 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest dto) {
-        return ResponseEntity.ok().body(userService.login(dto.getUserName(), ""));
+        return ResponseEntity.ok().body(userService.login(dto.getUsername(), ""));
     }
 }

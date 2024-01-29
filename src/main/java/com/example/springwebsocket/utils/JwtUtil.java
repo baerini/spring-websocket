@@ -12,7 +12,7 @@ public class JwtUtil {
 
     public static String getUsername(String token, String secretKey) {
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token)
-                .getBody().get("userName", String.class);
+                .getBody().get("username", String.class);
     }
 
     public static boolean isExpired(String token, String secretKey) {
@@ -22,7 +22,7 @@ public class JwtUtil {
     }
     public static String createJwt(String username, String secretKey, Long expiredMs) {
         Claims claims = Jwts.claims();
-        claims.put("userName", username);
+        claims.put("username", username);
 
         return Jwts.builder()
                 .setClaims(claims)

@@ -32,7 +32,7 @@ public class GameService {
         return new ArrayList<>(games.values());
     }
 
-    public Game findRoomById(Long gameId){
+    public Game findById(Long gameId){
         return games.get(gameId);
     }
 //
