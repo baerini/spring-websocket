@@ -14,5 +14,5 @@ public class MatchingDto {
 //    private WebSocketSession session;
     private MemberDto member;
     private Long time;
-    private int waiting;
+//    private int waiting;
 }

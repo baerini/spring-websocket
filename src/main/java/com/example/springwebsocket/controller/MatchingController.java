@@ -25,10 +25,10 @@ public class MatchingController {
 
     @GetMapping("/hello")
     public Result hello() {
-        ArrayList<Matching> matchSessions = matchingService.getMatchSessions();
+        ArrayList<Matching> matchSessions = matchingService.getMatchingSessions();
 
         List<MatchingDto> collect = matchSessions.stream()
-                .map(m-> new MatchingDto(m.getMember(), m.getTime(), m.getWaiting()))
+                .map(m-> new MatchingDto(m.getMember(), m.getTime()))
                 .collect(Collectors.toList());
 
         return new Result(collect.size(), collect);

@@ -19,6 +19,7 @@ import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -76,30 +77,32 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
 //        String payload = message.getPayload();
 
-        System.out.println("session = " + session);
+//        System.out.println("session = " + session);
 
         Payload payload = mapper.readValue(message.getPayload(), Payload.class);
-        log.info("payload : {}", payload.toString());
+//        log.info("payload : {}", payload.toString());
 
         //추후에 Game game = gameService.findRoomById(paylaod.gameId)로 변경;
 
         if(payload.type.equals(Payload.PayloadType.MATCH)) { // MATCHED 받을 일이 없음
-            ArrayList<Matching> matchingSessions = matchingService.getMatchSessions();
             MemberDto member = mapper.readValue(payload.message, MemberDto.class);
             Long time = payload.gameId;
 
-            matchingSessions.add(new Matching(session, member, time, 0));
-            log.info("matchSessions = {}", matchingSessions);
+            Matching matching = new Matching(session, member, time, new Date(), false);
 
-            // session.send(대기열 객체 리스트) => api로 받고
-            // add(session)
-            // sendToEachSocket(session 정보 객체)
+            //1.
+            matchingService.participate(matching);
+            sendToEachSocket(matchingService.getMatchingSessions(), message);
 
-            sendToEachSocket(matchingSessions, message);
-            log.info("message = {}", message);
+            // 대기열 추가 send : sendToEachSocket(matchingService.getMatchingSessions(), message);
+            // 매칭 완료 알림 send : sendToEachSocket(matchingService.getMatchedSessions(), message);
+
+            //2.
+
+//            log.info("message = {}", message);
         } else {
             Game game = gameService.findById(1L);
-            log.info("game : {}", game);
+//            log.info("game : {}", game);
 
             Set<WebSocketSession> sessions = game.getMatchedSessions();
 
@@ -133,7 +136,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
     }
 
     private void sendToEachSocket(Set<WebSocketSession> sessions, TextMessage message){
-        System.out.println("sessions = " + sessions);
+//        System.out.println("sessions = " + sessions);
 
         sessions.parallelStream().forEach( gameSession -> {
             try {
@@ -146,7 +149,7 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
     // overloading
     private void sendToEachSocket(ArrayList<Matching> sessions, TextMessage message){
-        System.out.println("matchSessions = " + sessions);
+//        System.out.println("matchSessions = " + sessions);
 
         sessions.parallelStream().forEach( gameSession -> {
             try {
