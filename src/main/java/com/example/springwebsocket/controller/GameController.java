@@ -45,14 +45,22 @@ public class GameController {
     // /game/{gameId} 가 best
     @GetMapping("/game")
     public String gameStart(@RequestParam("gameId") Long gameId,
-                            @RequestParam("color") String color,
-                            @RequestParam("time") Long time,
                             Authentication authentication,
                             Model model) {
+        /**
+         * 1. gameId를 통해서 game 엔티티 조회
+         * 2. authentication 에서 member 엔티티 조회
+         * 3. white 인지 black 인지 검사
+         *
+         */
         Member member = (Member) authentication.getPrincipal();
-        MemberDto memberDto = new MemberDto(member.getUsername(), member.getRating(), member.getWin(), member.getLose());
 
-        if (color.equals("white")) {
+        //model 에 담아줄 dto
+        MemberDto memberDto = new MemberDto(member.getUsername(), member.getRating(), member.getWin(), member.getLose());
+        Game game = gameService.findById(gameId);
+        String white = game.getWhite();
+
+        if (member.getUsername().equals(white)) {
             return "game/gameWhite";
         }
         return "game/gameBlack";

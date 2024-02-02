@@ -72,8 +72,6 @@
                     let arr = response['data'];
 
                     for(let i = 0; i < n; i++) {
-                        console.log(arr[i]);
-
                         // 새 행(Row) 추가
                         let newRow = table.insertRow();
 
@@ -89,7 +87,7 @@
                         newCell3.innerText = arr[i]['member'].rating;
                         newCell4.innerText = arr[i]['time'];
                     }
-                },
+                }
             });
 
             socket.onopen = function(e) {
@@ -104,18 +102,16 @@
 
             socket.onmessage = function(event) {
                 let msg = JSON.parse(event.data);
-                console.log(msg);
-                let sender = JSON.parse(msg.message);
 
                 if(msg.type == "MATCH") {
+                    let sender = JSON.parse(msg.message);
+
                     let idx = 1;
                     if(table.rows.length > 1) {
                         let lastRow = table.rows[table.rows.length - 1];
                         let firstCol = lastRow.cells[0].innerText;
                         idx = Number(firstCol) + 1;
                     }
-                    console.log(table.rows.length);
-                    console.log(idx);
 
                     // 새 행(Row) 추가
                     let newRow = table.insertRow();
@@ -134,14 +130,7 @@
                 }
 
                 if(msg.type == "MATCHED") {
-                    let arr = msg.message.split('|');
-                    let color = arr[0];
-                    let time = Number(arr[1]);
-
-                    // url 바로 옮겨버리면 session remove 하기 전에 url 옮겨서 error
-                    // 한번 더 sign 줘야함
-                    socket.close();
-                    location.href= `/game?gameId=${msg.gameId}&color=${color}&time=${time}`;
+                    location.href= `/game?gameId=${msg.gameId}`;
                 }
             };
 

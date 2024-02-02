@@ -38,11 +38,11 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
 //        String tmp = "";
-        log.info("doFilterInternal()");
+//        log.info("doFilterInternal()");
         Cookie[] cookies = request.getCookies();
 
         if (ObjectUtils.isEmpty(cookies)) {
-            log.error("쿠키가 없습니다");
+//            log.error("쿠키가 없습니다");
             filterChain.doFilter(request, response);
             return;
         }
@@ -55,7 +55,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        log.info("authorization = {}", authorization);
+//        log.info("authorization = {}", authorization);
 
         //token 없으면 block || !authorization.startsWith("Bearer ")
         if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -78,11 +78,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         //token 에서 username 꺼내기
         String username = JwtUtil.getUsername(token, secretKey);
-        log.info("username = {}", username);
+//        log.info("username = {}", username);
 
         //권한 부여
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(memberService.findByUsername(username), null, List.of(new SimpleGrantedAuthority("USER")));
-        log.info("UsernamePasswordAuthenticationToken = {}", authenticationToken);
+//        log.info("UsernamePasswordAuthenticationToken = {}", authenticationToken);
 
         //detail
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

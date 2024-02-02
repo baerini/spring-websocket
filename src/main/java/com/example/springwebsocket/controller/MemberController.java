@@ -37,7 +37,7 @@ public class MemberController {
                                HttpServletResponse response) {
         Member member = memberRepository.findByLoginIdAndPassword(loginId, password);
         String jwt = userService.login(member.getUsername(), "");
-        log.info("발급할 jwt = {}", jwt);
+//        log.info("발급할 jwt = {}", jwt);
 
 //        ResponseCookie authorization = ResponseCookie
 //                .from("authorization", jwt)

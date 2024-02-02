@@ -18,10 +18,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.w3c.dom.Text;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -90,10 +87,19 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
             Matching matching = new Matching(session, member, time, new Date(), false);
 
-            //1.
-            matchingService.participate(matching);
-            sendToEachSocket(matchingService.getMatchingSessions(), message);
 
+            /***
+             * 매칭버튼 =>
+             * 프론트 현재 matchingSessions ajax로 받아오고 테이블에 추가
+             * 백엔드 자신을 matchingSessions 에 추가
+             * 백엔드 자신이 들어왔다는 것을 matchingSessions 에게 알림
+             * 프론트 테이블 표 하위에 알림받은 사람을 추가(자신이 될수도 있음)
+             *
+             */
+
+            //1.
+            matchingService.getMatchingSessions().add(matching);
+            sendToEachSocket(matchingService.getMatchingSessions(), message);
             // 대기열 추가 send : sendToEachSocket(matchingService.getMatchingSessions(), message);
             // 매칭 완료 알림 send : sendToEachSocket(matchingService.getMatchedSessions(), message);
 
@@ -101,19 +107,18 @@ public class WebSocketChatHandler extends TextWebSocketHandler {
 
 //            log.info("message = {}", message);
         } else {
-            Game game = gameService.findById(1L);
-//            log.info("game : {}", game);
+            Map<Long, Set<WebSocketSession>> map = gameService.getMap();
 
-            Set<WebSocketSession> sessions = game.getMatchedSessions();
+            Game game = gameService.findById(payload.gameId);
+            Set<WebSocketSession> sessions = map.get(payload.gameId);
 
-            if(payload.type.equals(Payload.PayloadType.ENTER)) {
-
+            if (payload.type.equals(Payload.PayloadType.ENTER)) {
                 sessions.add(session);
-            } else if(payload.type.equals(Payload.PayloadType.MOVE)) {
+            } else if (payload.type.equals(Payload.PayloadType.MOVE)) {
 
-            } else if(payload.type.equals(Payload.PayloadType.CHAT)) {
+            } else if (payload.type.equals(Payload.PayloadType.CHAT)) {
 
-            } else if(payload.type.equals(Payload.PayloadType.RESULT)) {
+            } else if (payload.type.equals(Payload.PayloadType.RESULT)) {
 
             }
             sendToEachSocket(sessions, message);
