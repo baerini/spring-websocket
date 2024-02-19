@@ -1,9 +1,16 @@
 spring:
   datasource:
-    url: jdbc:h2:tcp://localhost/~/chat
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    #mysql
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/chess?serverTimezone=Asia/Seoul
+    username: root
+    password: 1111
+
+    #h2
+#    url: jdbc:h2:tcp://localhost/~/chat
+#    username: sa
+#    password:
+#    driver-class-name: org.h2.Driver
 
   jpa:
     hibernate:
