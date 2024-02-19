@@ -30,4 +30,14 @@ public class Member {
         this.win = 0;
         this.lose = 0;
     }
+
+    public void win(int rating) {
+        this.rating = rating;
+        this.win += 1;
+    }
+
+    public void lose(int rating) {
+        this.rating = rating;
+        this.lose += 1;
+    }
 }

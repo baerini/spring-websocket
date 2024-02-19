@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>White</title>
     <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 <body>
-<div class="blackTimer" id="blackTimer">10:00</div>
+<div>
+    <div> username : <span th:text="${member2.username}"></span></div>
+    <div> rating : <span th:text="${member2.rating}"></span></div>
+    <div> win : <span th:text="${member2.win}"></span></div>
+    <div> lose : <span th:text="${member2.lose}"></span></div>
+</div>
+<div class="blackTimer" id="blackTimer">Loading...</div>
 <div class="chessBoard">
     <!-- Add the pawn div element -->
     <div class="square white">
@@ -253,9 +260,44 @@
 <div id="alert">
 
 </div>
-<div class="whiteTimer" id="whiteTimer">10:00</div>
 
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5  id="staticBackdropLabel" class="modal-title">Loading...</h5>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <span th:text="${member1.username}"></span><span> vs </span>
+                    <span th:text="${member2.username}"></span>
+                </div>
+                <div>
+                    <span id="myRating" th:text="${member1.rating}"></span>
+                    <span>(</span><span id="changeRating"></span><span>)</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="toLobby()" type="button" class="btn btn-primary">Lobby</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<div class="whiteTimer" id="whiteTimer">Loading...</div>
+<div>
+    <div> username : <span th:text="${member1.username}"></span></div>
+    <div> rating : <span th:text="${member1.rating}"></span></div>
+    <div> win : <span th:text="${member1.win}"></span></div>
+    <div> lose : <span th:text="${member1.lose}"></span></div>
+</div>
+
+<script th:inline="javascript">
+    let time = [[${time}]];
+    let gameId = [[${gameId}]];
+    console.log(time);
+</script>
 <script src="js/white.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 </body>
 </html>

@@ -1,12 +1,9 @@
-/**
- * 웹소켓 구역
- */
 let socket = new WebSocket("ws://localhost:8080/ws/chat");
 
 socket.onopen = function(e) {
     console.log("connection open");
     socket.send(JSON.stringify({
-        "gameId" : 1,
+        "gameId" : gameId,
         "sender" : "black",
         "type" : "ENTER",
         "message": "Black enter the game"
@@ -25,8 +22,43 @@ socket.onmessage = function(event) {
             startTimer();
         } else {
             isWhiteTurn = !isWhiteTurn;
+            checkForCheckMate();
             clearInterval(blackTimer);
             startTimer();
+        }
+    }
+
+    else if(msg.type == "RESULT") {
+        if(msg.sender == "black") {
+            clearInterval(blackTimer);
+            clearInterval(whiteTimer);
+
+            let gameResult = document.getElementById('staticBackdropLabel');
+            let changeRating = document.getElementById('changeRating');
+            let myRatingElement = document.getElementById('myRating');
+            let beforeRating = parseInt(myRatingElement.innerText);
+            let afterRating = parseInt(msg.message);
+            let t = 0;
+
+            if(beforeRating < afterRating) {
+                t = 1;
+                gameResult.innerHTML = "you win";
+                changeRating.innerHTML = "+" + (afterRating - beforeRating).toString();
+            } else {
+                t = -1;
+                gameResult.innerHTML = "you lose";
+                changeRating.innerHTML = (afterRating - beforeRating).toString();
+            }
+            openModal();
+
+            let interval = setInterval(function() {
+                beforeRating = beforeRating + t;
+                myRatingElement.textContent = beforeRating;
+
+                if (beforeRating === afterRating) {
+                    clearInterval(interval);
+                }
+            }, 100);
         }
     }
 };
@@ -40,8 +72,8 @@ socket.onerror = function(error) {
 
 let boardSquaresArray = [];
 let isWhiteTurn = true;
-let whiteKingSquare="e1";
-let blackKingSquare="e8";
+let whiteKingSquare = "e1";
+let blackKingSquare = "e8";
 const boardSquares = document.getElementsByClassName("square");
 const pieces = document.getElementsByClassName("piece");
 const piecesImages = document.getElementsByTagName("img");
@@ -56,7 +88,7 @@ function fillBoardSquaresArray() {
 
         let color = "";
         let pieceType = "";
-        let pieceId="";
+        let pieceId = "";
 
         if (square.querySelector(".piece")) {
             color = square.querySelector(".piece").getAttribute("color");
@@ -65,13 +97,13 @@ function fillBoardSquaresArray() {
         } else {
             color = "blank";
             pieceType = "blank";
-            pieceId ="blank";
+            pieceId = "blank";
         }
         let arrayElement = {
             squareId: square.id,
             pieceColor: color,
             pieceType: pieceType,
-            pieceId:pieceId
+            pieceId: pieceId
         };
         boardSquaresArray.push(arrayElement);
     }
@@ -137,7 +169,7 @@ function drag(ev) {
     const pieceColor = piece.getAttribute("color");
     const pieceType = piece.classList[1];
     const pieceId=piece.id;
-//    if ((isWhiteTurn && pieceColor == "white") || (!isWhiteTurn && pieceColor == "black"))
+
     if (!isWhiteTurn && pieceColor == "black") {
         const startingSquareId = piece.parentNode.id;
         ev.dataTransfer.setData("text", piece.id + "|" + startingSquareId);
@@ -157,7 +189,7 @@ function drop(ev) {
     let data = ev.dataTransfer.getData("text");
     let [pieceId, startingSquareId] = data.split("|");
     let legalSquaresJson = ev.dataTransfer.getData("application/json");
-    if (legalSquaresJson.length == 0) return; //움직일 곳 없음
+    if (legalSquaresJson.length == 0) return;
     let legalSquares = JSON.parse(legalSquaresJson);
 
     const piece = document.getElementById(pieceId);
@@ -172,9 +204,9 @@ function drop(ev) {
     if (pieceType == "king") {
         let isCheck = isKingInCheck(destinationSquareId, pieceColor, boardSquaresArray);
         if (isCheck) {
-            return; // 못 가니까 drop 무효화
+            return;
         } else {
-            if (isWhiteTurn) { //왕 위치 조정
+            if (isWhiteTurn) {
                 whiteKingSquare = destinationSquareId;
             } else {
                 blackKingSquare = destinationSquareId;
@@ -184,23 +216,20 @@ function drop(ev) {
 
     let squareContent = getPieceAtSquare(destinationSquareId, boardSquaresArray);
     if (squareContent.pieceColor == "blank" && legalSquares.includes(destinationSquareId)) {
-        //websocket 구역//
         let sender;
         if (isWhiteTurn) {
             sender = "white";
         } else {
-            sender = "black"; //추후에 삭제
+            sender = "black";
         }
 
         socket.send(JSON.stringify({
-            "gameId" : 1,
+            "gameId" : gameId,
             "sender" : sender,
             "type" : "MOVE",
             "message": pieceId + "|" + startingSquareId + "|" + destinationSquareId // startingSquareId, destinationSquareId
         }));
-        //websocket 구역//
         destinationSquare.appendChild(piece);
-//        isWhiteTurn = !isWhiteTurn;
         updateBoardSquaresArray(startingSquareId, destinationSquareId, boardSquaresArray);
         checkForCheckMate();
         return;
@@ -213,23 +242,20 @@ function drop(ev) {
                 destinationSquare.removeChild(children[i]);
             }
         }
-        //websocket 구역//
         let sender;
         if (isWhiteTurn) {
             sender = "white";
         } else {
-            sender = "black"; //추후에 삭제
+            sender = "black";
         }
 
         socket.send(JSON.stringify({
-            "gameId" : 1,
+            "gameId" : gameId,
             "sender" : sender,
             "type" : "MOVE",
             "message": pieceId + "|" + startingSquareId + "|" + destinationSquareId // startingSquareId, destinationSquareId
         }));
-        //websocket 구역//
         destinationSquare.appendChild(piece);
-//        isWhiteTurn = !isWhiteTurn;
         updateBoardSquaresArray(startingSquareId, destinationSquareId, boardSquaresArray);
         checkForCheckMate();
         return;
@@ -250,33 +276,32 @@ function updateBoardSquares(pieceId, startingSquareId, destinationSquareId, boar
     checkForCheckMate();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
 function getPossibleMoves(startingSquareId, piece, boardSquaresArray) {
     const pieceColor = piece.pieceColor;
-    const pieceType=piece.pieceType;
+    const pieceType = piece.pieceType;
     let legalSquares = [];
-    if (pieceType=="rook") {
+    if (pieceType == "rook") {
         legalSquares = getRookMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="bishop") {
+    if (pieceType == "bishop") {
         legalSquares = getBishopMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="queen") {
+    if (pieceType == "queen") {
         legalSquares = getQueenMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="knight") {
+    if (pieceType == "knight") {
         legalSquares = getKnightMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
 
-    if (pieceType=="pawn") {
+    if (pieceType == "pawn") {
         legalSquares = getPawnMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="king") {
+    if (pieceType == "king") {
         legalSquares = getKingMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
@@ -374,9 +399,9 @@ function getKnightMoves(startingSquareId, pieceColor, boardSquaresArray) {
 }
 
 function getKingMoves(startingSquareId, pieceColor,boardSquaresArray) {
-    const file = startingSquareId.charCodeAt(0) - 97; // get the second character of the string
-    const rank = startingSquareId.charAt(1); // get the second character of the string
-    const rankNumber = parseInt(rank); // convert the second character to a number
+    const file = startingSquareId.charCodeAt(0) - 97;
+    const rank = startingSquareId.charAt(1);
+    const rankNumber = parseInt(rank);
     let legalSquares = [];
     const moves = [[0, 1],[0, -1],[1, 1],[1, -1],[-1, 0],[-1, 1],[-1, -1],[1, 0]];
 
@@ -582,14 +607,15 @@ function moveToFirstRankAFile(startingSquareId, pieceColor, boardSquaresArray) {
     }
     return legalSquares;
 }
-function moveToFirstRankHFile(startingSquareId,pieceColor,boardSquaresArray) {
+
+function moveToFirstRankHFile(startingSquareId, pieceColor, boardSquaresArray) {
     const file = startingSquareId.charAt(0);
     const rank = startingSquareId.charAt(1);
     const rankNumber = parseInt(rank);
     let currentFile = file;
     let currentRank = rankNumber;
     let legalSquares = [];
-    while(!(currentFile=="h" || currentRank == 1)){
+    while(!(currentFile == "h" || currentRank == 1)){
         currentFile = String.fromCharCode(
         currentFile.charCodeAt(currentFile.length - 1) + 1
         );
@@ -614,7 +640,6 @@ function getQueenMoves(startingSquareId, pieceColor, boardSquaresArray) {
     let legalSquares = [...bishopMoves, ...rookMoves];
     return legalSquares;
 }
-////////////////////////////////////////////////////////////////////////////////////////
 
 function getPieceAtSquare(squareId, boardSquaresArray) {
     let currentSquare = boardSquaresArray.find(
@@ -692,26 +717,28 @@ function checkForCheckMate() {
     if(!kingIsCheck) return;
 
     let possibleMoves = getAllPossibleMoves(boardSquaresArrayCopy,pieceColor);
-    console.log(possibleMoves);
     if(possibleMoves.length > 0) return;
 
-    let message="";
-    isWhiteTurn ? (message="Black Wins!") : (message="White Wins!");
-    showAlert(message);
-    /*
-    websocket
-    */
+    if (isWhiteTurn) {
+        socket.send(JSON.stringify({
+            "gameId" : gameId,
+            "sender" : "black",
+            "type" : "RESULT",
+            "message": "black"
+        }));
+    }
+    showAlert("Checkmate");
 }
 
 function getAllPossibleMoves(squaresArray,color) {
-    return squaresArray.filter((square) => square.pieceColor === color).flatMap((square)=>{
+    return squaresArray.filter((square) => square.pieceColor === color).flatMap((square) => {
         const {pieceColor,pieceType,pieceId} = getPieceAtSquare(square.squareId,squaresArray);
-        if(pieceId==="blank") return [];
-        let squaresArrayCopy=deepCopyArray(squaresArray);
-        const pieceObject={
+        if(pieceId === "blank") return [];
+        let squaresArrayCopy = deepCopyArray(squaresArray);
+        const pieceObject = {
             pieceColor: pieceColor,
-            pieceType:pieceType,
-            pieceId:pieceId
+            pieceType: pieceType,
+            pieceId: pieceId
         }
         let legalSquares = getPossibleMoves(square.squareId, pieceObject, squaresArrayCopy);
         legalSquares = isMoveValidAgainstCheck(legalSquares, square.squareId, pieceColor,pieceType);
@@ -719,19 +746,28 @@ function getAllPossibleMoves(squaresArray,color) {
     })
 }
 function showAlert(message) {
-    const alert= document.getElementById("alert");
-    alert.innerHTML=message;
-    alert.style.display="block";
+    const alert = document.getElementById("alert");
+    alert.innerHTML = message;
+    alert.style.display = "block";
 
-    setTimeout(function(){
-        alert.style.display="none";
+    setTimeout(function() {
+        alert.style.display = "none";
     },3000);
 }
 
-//timer//
+function openModal() {
+    var myModal = new bootstrap.Modal(document.getElementById('staticBackdrop'));
+    myModal.show();
+}
+
+function toLobby() {
+    socket.close();
+    location.href= `/lobby`;
+}
+
 let whiteTimer, blackTimer;
-let whiteTime = 600; //추후에 10, 15분 입력받기
-let blackTime = 600;
+let whiteTime = 60 * time;
+let blackTime = 60 * time;
 
 function updateTimers() {
     document.getElementById('whiteTimer').innerText = formatTime(whiteTime);
@@ -751,9 +787,13 @@ function startTimer() {
             updateTimers();
             if (whiteTime <= 0) {
                 clearInterval(whiteTimer);
-                /*
-                websocket
-                */
+                socket.send(JSON.stringify({
+                    "gameId" : gameId,
+                    "sender" : "black",
+                    "type" : "RESULT",
+                    "message": "black"
+                }));
+                showAlert("Time out");
             }
         }, 1000);
     } else {
@@ -762,13 +802,16 @@ function startTimer() {
             updateTimers();
             if (blackTime <= 0) {
                 clearInterval(blackTimer);
-                /*
-                websocket
-                */
+                socket.send(JSON.stringify({
+                    "gameId" : gameId,
+                    "sender" : "black",
+                    "type" : "RESULT",
+                    "message": "white"
+                }));
+                showAlert("Time out");
             }
         }, 1000);
     }
 }
 
 startTimer();
-//timer//

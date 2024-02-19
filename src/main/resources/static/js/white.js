@@ -1,12 +1,9 @@
-/**
- * 웹소켓 구역
- */
 let socket = new WebSocket("ws://localhost:8080/ws/chat");
 
 socket.onopen = function(e) {
     console.log("connection open");
     socket.send(JSON.stringify({
-        "gameId" : 1,
+        "gameId" : gameId,
         "sender" : "white",
         "type" : "ENTER",
         "message": "White enter the game"
@@ -25,10 +22,44 @@ socket.onmessage = function(event) {
             startTimer();
         } else {
             isWhiteTurn = !isWhiteTurn;
+            checkForCheckMate();
             clearInterval(whiteTimer);
             startTimer();
         }
+    }
 
+    else if(msg.type == "RESULT") {
+        if(msg.sender == "white") {
+            clearInterval(blackTimer);
+            clearInterval(whiteTimer);
+
+            let gameResult = document.getElementById('staticBackdropLabel');
+            let changeRating = document.getElementById('changeRating');
+            let myRatingElement = document.getElementById('myRating');
+            let beforeRating = parseInt(myRatingElement.innerText);
+            let afterRating = parseInt(msg.message);
+            let t = 0;
+
+            if(beforeRating < afterRating) {
+                t = 1;
+                gameResult.innerHTML = "you win";
+                changeRating.innerHTML = "+" + (afterRating - beforeRating).toString();
+            } else {
+                t = -1;
+                gameResult.innerHTML = "you lose";
+                changeRating.innerHTML = (afterRating - beforeRating).toString();
+            }
+            openModal();
+
+            let interval = setInterval(function() {
+                beforeRating = beforeRating + t;
+                myRatingElement.textContent = beforeRating;
+
+                if (beforeRating === afterRating) {
+                    clearInterval(interval);
+                }
+            }, 100);
+        }
     }
 };
 
@@ -41,8 +72,8 @@ socket.onerror = function(error) {
 
 let boardSquaresArray = [];
 let isWhiteTurn = true;
-let whiteKingSquare="e1";
-let blackKingSquare="e8";
+let whiteKingSquare = "e1";
+let blackKingSquare = "e8";
 const boardSquares = document.getElementsByClassName("square");
 const pieces = document.getElementsByClassName("piece");
 const piecesImages = document.getElementsByTagName("img");
@@ -57,7 +88,7 @@ function fillBoardSquaresArray() {
 
         let color = "";
         let pieceType = "";
-        let pieceId="";
+        let pieceId = "";
 
         if (square.querySelector(".piece")) {
             color = square.querySelector(".piece").getAttribute("color");
@@ -138,7 +169,7 @@ function drag(ev) {
     const pieceColor = piece.getAttribute("color");
     const pieceType = piece.classList[1];
     const pieceId = piece.id;
-//    if ((isWhiteTurn && pieceColor == "white") || (!isWhiteTurn && pieceColor == "black"))
+
     if (isWhiteTurn && pieceColor == "white") {
         const startingSquareId = piece.parentNode.id;
         ev.dataTransfer.setData("text", piece.id + "|" + startingSquareId);
@@ -149,45 +180,36 @@ function drag(ev) {
         }
 
         let legalSquares = getPossibleMoves(startingSquareId, pieceObject, boardSquaresArray);
-        // console.log(legalSquares);
         let legalSquaresJson = JSON.stringify(legalSquares);
-        // console.log(legalSquaresJson);
         ev.dataTransfer.setData("application/json", legalSquaresJson);
     }
 }
 
 function drop(ev) {
     ev.preventDefault();
-    /**
-     * "text" => drag한pieceId | 원래squareId
-     * "application/json" => 갈 수있는곳 모음 ["a3","h2"]
-     */
     let data = ev.dataTransfer.getData("text");
     let [pieceId, startingSquareId] = data.split("|");
     let legalSquaresJson = ev.dataTransfer.getData("application/json");
-    // console.log(legalSquaresJson);
-    if (legalSquaresJson.length == 0) return; //움직일 곳 없으니 board update안함 무효처리
+
+    if (legalSquaresJson.length == 0) return;
     let legalSquares = JSON.parse(legalSquaresJson);
-    // console.log(legalSquares);
 
     const piece = document.getElementById(pieceId);
     const pieceColor = piece.getAttribute("color");
     const pieceType = piece.classList[1];
-    // console.log(pieceId, piece, pieceColor, pieceType);
 
     const destinationSquare = ev.currentTarget;
     let destinationSquareId = destinationSquare.id;
 
-    legalSquares = isMoveValidAgainstCheck(legalSquares, startingSquareId, pieceColor, pieceType); //legalSquares에서 움직인다면 왕이 죽는 위치 제외
-    // console.log(legalSquares);
+    legalSquares = isMoveValidAgainstCheck(legalSquares, startingSquareId, pieceColor, pieceType);
 
     if (pieceType == "king") {
-        let isCheck = isKingInCheck(destinationSquareId, pieceColor, boardSquaresArray); // 왕을 drop한 곳이 체크인지 검사
-        // console.log(isCheck);
+        let isCheck = isKingInCheck(destinationSquareId, pieceColor, boardSquaresArray);
+
         if (isCheck) {
-            return; // 못 가니까 drop 무효화
+            return;
         } else {
-            if (isWhiteTurn) { //왕 위치 조정
+            if (isWhiteTurn) {
                 whiteKingSquare = destinationSquareId;
             } else {
                 blackKingSquare = destinationSquareId;
@@ -195,34 +217,28 @@ function drop(ev) {
         }
     }
 
-    let squareContent = getPieceAtSquare(destinationSquareId, boardSquaresArray); // drop 한 위치의 piece정보 pieceColor, piece, pieceId
-    // console.log(squareContent);
+    let squareContent = getPieceAtSquare(destinationSquareId, boardSquaresArray);
 
-    // drop한 곳은 빈칸이라 움직임
     if (squareContent.pieceColor == "blank" && legalSquares.includes(destinationSquareId)) {
-        //websocket 구역//
         let sender;
         if (isWhiteTurn) {
             sender = "white";
         } else {
-            sender = "black"; //추후에 삭제
+            sender = "black";
         }
 
         socket.send(JSON.stringify({
-            "gameId" : 1,
+            "gameId" : gameId,
             "sender" : sender,
             "type" : "MOVE",
-            "message": pieceId + "|" + startingSquareId + "|" + destinationSquareId // startingSquareId, destinationSquareId
+            "message": pieceId + "|" + startingSquareId + "|" + destinationSquareId
         }));
-        //websocket 구역//
         destinationSquare.appendChild(piece);
-//        isWhiteTurn = !isWhiteTurn;
         updateBoardSquaresArray(startingSquareId, destinationSquareId, boardSquaresArray);
         checkForCheckMate();
         return;
     }
 
-    // drop한 곳에 상대편의 말이 있어서 잡음
     if (squareContent.pieceColor != "blank" && legalSquares.includes(destinationSquareId)) {
         let children = destinationSquare.children;
         for (let i = 0; i < children.length; i++) {
@@ -230,23 +246,20 @@ function drop(ev) {
                 destinationSquare.removeChild(children[i]);
             }
         }
-        //websocket 구역//
         let sender;
         if (isWhiteTurn) {
             sender = "white";
         } else {
-            sender = "black"; //추후에 삭제
+            sender = "black";
         }
 
         socket.send(JSON.stringify({
-            "gameId" : 1,
+            "gameId" : gameId,
             "sender" : sender,
             "type" : "MOVE",
-            "message": pieceId + "|" + startingSquareId + "|" + destinationSquareId // startingSquareId, destinationSquareId
+            "message": pieceId + "|" + startingSquareId + "|" + destinationSquareId
         }));
-        //websocket 구역//
         destinationSquare.appendChild(piece);
-//        isWhiteTurn = !isWhiteTurn;
         updateBoardSquaresArray(startingSquareId, destinationSquareId, boardSquaresArray);
         checkForCheckMate();
         return;
@@ -267,34 +280,33 @@ function updateBoardSquares(pieceId, startingSquareId, destinationSquareId, boar
     checkForCheckMate();
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
-function getPossibleMoves(startingSquareId, piece, boardSquaresArray) { // drag할 때 발생, 왕 죽든말든 그냥 갈 수 있는 곳 모아서 반환
+function getPossibleMoves(startingSquareId, piece, boardSquaresArray) {
     const pieceColor = piece.pieceColor;
     const pieceType = piece.pieceType;
     let legalSquares = [];
 
-    if (pieceType=="rook") {
+    if (pieceType == "rook") {
         legalSquares = getRookMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="bishop") {
+    if (pieceType == "bishop") {
         legalSquares = getBishopMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="queen") {
+    if (pieceType == "queen") {
         legalSquares = getQueenMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="knight") {
+    if (pieceType == "knight") {
         legalSquares = getKnightMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
 
-    if (pieceType=="pawn") {
+    if (pieceType == "pawn") {
         legalSquares = getPawnMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
-    if (pieceType=="king") {
+    if (pieceType == "king") {
         legalSquares = getKingMoves(startingSquareId, pieceColor, boardSquaresArray);
         return legalSquares;
     }
@@ -392,9 +404,9 @@ function getKnightMoves(startingSquareId, pieceColor, boardSquaresArray) {
 }
 
 function getKingMoves(startingSquareId, pieceColor,boardSquaresArray) {
-    const file = startingSquareId.charCodeAt(0) - 97; // get the second character of the string
-    const rank = startingSquareId.charAt(1); // get the second character of the string
-    const rankNumber = parseInt(rank); // convert the second character to a number
+    const file = startingSquareId.charCodeAt(0) - 97;
+    const rank = startingSquareId.charAt(1);
+    const rankNumber = parseInt(rank);
     let legalSquares = [];
     const moves = [[0, 1],[0, -1],[1, 1],[1, -1],[-1, 0],[-1, 1],[-1, -1],[1, 0]];
 
@@ -600,14 +612,14 @@ function moveToFirstRankAFile(startingSquareId, pieceColor, boardSquaresArray) {
     }
     return legalSquares;
 }
-function moveToFirstRankHFile(startingSquareId,pieceColor,boardSquaresArray) {
+function moveToFirstRankHFile(startingSquareId, pieceColor, boardSquaresArray) {
     const file = startingSquareId.charAt(0);
     const rank = startingSquareId.charAt(1);
     const rankNumber = parseInt(rank);
     let currentFile = file;
     let currentRank = rankNumber;
     let legalSquares = [];
-    while(!(currentFile=="h" || currentRank == 1)){
+    while(!(currentFile == "h" || currentRank == 1)){
         currentFile = String.fromCharCode(
         currentFile.charCodeAt(currentFile.length - 1) + 1
         );
@@ -632,16 +644,14 @@ function getQueenMoves(startingSquareId, pieceColor, boardSquaresArray) {
     let legalSquares = [...bishopMoves, ...rookMoves];
     return legalSquares;
 }
-////////////////////////////////////////////////////////////////////////////////////////
 
-function getPieceAtSquare(squareId, boardSquaresArray) { //drop할때 발생
+function getPieceAtSquare(squareId, boardSquaresArray) {
     let currentSquare = boardSquaresArray.find(
         (element) => element.squareId === squareId
     );
     const color = currentSquare.pieceColor;
     const pieceType = currentSquare.pieceType;
     const pieceId = currentSquare.pieceId;
-    // console.log(color, pieceType, pieceId);
     return {
         pieceColor: color,
         pieceType: pieceType,
@@ -649,7 +659,7 @@ function getPieceAtSquare(squareId, boardSquaresArray) { //drop할때 발생
     };
 }
 
-function isKingInCheck(squareId, pieceColor, boardSquaresArray) { // -> boolean
+function isKingInCheck(squareId, pieceColor, boardSquaresArray) {
     let legalSquares = getRookMoves(squareId, pieceColor, boardSquaresArray);
     for (let squareId of legalSquares) {
         let pieceProperties = getPieceAtSquare(squareId,boardSquaresArray);
@@ -686,7 +696,7 @@ function isMoveValidAgainstCheck(legalSquares, startingSquareId, pieceColor, pie
     let kingSquare = isWhiteTurn ? whiteKingSquare : blackKingSquare;
     let boardSquaresArrayCopy = deepCopyArray(boardSquaresArray);
     let legalSquaresCopy = legalSquares.slice();
-    legalSquaresCopy.forEach((element)=>{
+    legalSquaresCopy.forEach((element) => {
         let destinationId = element;
         boardSquaresArrayCopy = deepCopyArray(boardSquaresArray);
         updateBoardSquaresArray(startingSquareId, destinationId, boardSquaresArrayCopy);
@@ -706,31 +716,33 @@ function checkForCheckMate() {
     let kingSquare = isWhiteTurn ? whiteKingSquare : blackKingSquare;
     let pieceColor = isWhiteTurn ? "white" : "black";
     let boardSquaresArrayCopy = deepCopyArray(boardSquaresArray);
-    let kingIsCheck = isKingInCheck(kingSquare,pieceColor,boardSquaresArrayCopy);
+    let kingIsCheck = isKingInCheck(kingSquare, pieceColor, boardSquaresArrayCopy);
 
     if(!kingIsCheck) return;
 
     let possibleMoves = getAllPossibleMoves(boardSquaresArrayCopy,pieceColor);
-    console.log(possibleMoves);
     if(possibleMoves.length > 0) return;
 
-    let message="";
-    isWhiteTurn ? (message="Black Wins!") : (message="White Wins!");
-    showAlert(message);
-    /*
-    websocket
-    */
+    if (!isWhiteTurn) {
+        socket.send(JSON.stringify({
+            "gameId" : gameId,
+            "sender" : "white",
+            "type" : "RESULT",
+            "message": "white"
+        }));
+    }
+    showAlert("Checkmate");
 }
 
 function getAllPossibleMoves(squaresArray,color) {
     return squaresArray.filter((square) => square.pieceColor === color).flatMap((square)=>{
         const {pieceColor,pieceType,pieceId} = getPieceAtSquare(square.squareId,squaresArray);
         if(pieceId==="blank") return [];
-        let squaresArrayCopy=deepCopyArray(squaresArray);
-        const pieceObject={
+        let squaresArrayCopy = deepCopyArray(squaresArray);
+        const pieceObject = {
             pieceColor: pieceColor,
-            pieceType:pieceType,
-            pieceId:pieceId
+            pieceType: pieceType,
+            pieceId: pieceId
         }
         let legalSquares=getPossibleMoves(square.squareId, pieceObject, squaresArrayCopy);
         legalSquares=isMoveValidAgainstCheck(legalSquares, square.squareId, pieceColor,pieceType);
@@ -738,19 +750,28 @@ function getAllPossibleMoves(squaresArray,color) {
     })
 }
 function showAlert(message) {
-    const alert= document.getElementById("alert");
-    alert.innerHTML=message;
-    alert.style.display="block";
+    const alert = document.getElementById("alert");
+    alert.innerHTML = message;
+    alert.style.display = "block";
 
-    setTimeout(function(){
-        alert.style.display="none";
+    setTimeout(function() {
+        alert.style.display = "none";
     },3000);
 }
 
-//timer//
+function openModal() {
+    let myModal = new bootstrap.Modal(document.getElementById('staticBackdrop'));
+    myModal.show();
+}
+
+function toLobby() {
+    socket.close();
+    location.href= `/lobby`;
+}
+
 let whiteTimer, blackTimer;
-let whiteTime = 600; //추후에 10, 15분 입력받기
-let blackTime = 600;
+let whiteTime = 60 * time;
+let blackTime = 60 * time;
 
 function updateTimers() {
     document.getElementById('whiteTimer').innerText = formatTime(whiteTime);
@@ -770,9 +791,13 @@ function startTimer() {
             updateTimers();
             if (whiteTime <= 0) {
                 clearInterval(whiteTimer);
-                /*
-                websocket
-                */
+                socket.send(JSON.stringify({
+                    "gameId" : gameId,
+                    "sender" : "white",
+                    "type" : "RESULT",
+                    "message": "black"
+                }));
+                showAlert("Time out");
             }
         }, 1000);
     } else {
@@ -781,14 +806,17 @@ function startTimer() {
             updateTimers();
             if (blackTime <= 0) {
                 clearInterval(blackTimer);
-                /*
-                websocket
-                */
+                socket.send(JSON.stringify({
+                    "gameId" : gameId,
+                    "sender" : "white",
+                    "type" : "RESULT",
+                    "message": "white"
+                }));
+                showAlert("Time out");
             }
         }, 1000);
     }
 }
 
 startTimer();
-//timer//
 

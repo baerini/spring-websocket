@@ -3,27 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f1f1f1;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .signup-container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .signup-container h2 {
+        text-align: center;
+    }
+
+    .input-group {
+        margin-bottom: 15px;
+    }
+
+    .input-group input {
+        width: 90%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-size: 16px;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .btn {
+        width: 48%;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .btn-back {
+        background-color: #6c757d;
+        color: #fff;
+    }
+
+    .btn-submit {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    .btn-check {
+        background-color: #28a745;
+        color: #fff;
+    }
+
+    .field-error {
+         border-color: #dc3545;
+         color: #dc3545;
+    }
+    </style>
 </head>
 <body>
-<p>sign up page</p>
-<form action="add" method="post">
-    <div>
-        <label for="username">이름</label>
-        <input type="text" id="username" name="username">
+<form action="add" th:action th:object="${addMemberDto}" method="post" class="signup-container">
+    <h2>Sign Up</h2>
+    <div class="input-group">
+        <label for="loginId">ID</label>
+        <input type="text" id="loginId" th:field="*{loginId}"
+               th:class="${errors?.containsKey('loginId')} ? 'form-control field-error':'form-control'">
+        <div class="field-error" th:if="${errors?.containsKey('loginId')}"
+             th:text="${errors['loginId']}">
+            아이디 오류
+        </div>
     </div>
-    <div>
-        <label for="loginId">로그인 ID</label>
-        <input type="text" id="loginId" name="loginId">
+    <div class="input-group">
+        <label for="password">Password</label>
+        <input th:class="${errors?.containsKey('password')} ? 'form-control field-error':'form-control'"
+               type="text" th:field="*{password}" name="password" id="password">
+        <div class="field-error" th:if="${errors?.containsKey('password')}"
+             th:text="${errors['password']}">
+            비밀번호 오류
+        </div>
     </div>
-    <div>
-        <label for="password">비밀번호</label>
-        <input type="password" id="password" name="password">
+    <div class="input-group">
+        <label for="username">Name</label>
+        <input th:class="${errors?.containsKey('username')} ? 'form-control field-error':'form-control'"
+               type="text" th:field="*{username}" name="username" id="username">
+        <div class="field-error" th:if="${errors?.containsKey('username')}"
+             th:text="${errors['username']}">
+            이름 오류
+        </div>
     </div>
-    <div>
-        <input type="submit">submit</input>
-        <input type="button" th:onclick="|location.href='@{/members/login}'|">뒤로가기</input>
+    <div class="btn-group">
+        <input class="btn btn-back" type="submit" value="submit">
+        <input class="btn btn-submit" type="button" th:onclick="|location.href='@{/members/login}'|" value="back">
     </div>
 </form>
-
 </body>
 </html>

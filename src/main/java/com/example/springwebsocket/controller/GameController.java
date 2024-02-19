@@ -24,51 +24,36 @@ public class GameController {
     private final MemberService memberService;
     private final SecurityService securityService;
 
-//    @GetMapping("/white")
-//    public String whiteGame(Authentication authentication, Model model) {
-//        Member member = (Member) authentication.getPrincipal();
-//        MemberDto memberDto = new MemberDto(member.getUsername(), member.getRating(), member.getWin(), member.getLose());
-//        model.addAttribute("member", memberDto);
-//        Game game = gameService.createGame();
-//        System.out.println("jwt = " + securityService.makeJwtToken());
-//        return "game/gameWhite";
-//    }
-//
-//    @GetMapping("/black")
-//    public String blackGame(Authentication authentication, Model model) {
-//        Member member = (Member) authentication.getPrincipal();
-//        MemberDto memberDto = new MemberDto(member.getUsername(), member.getRating(), member.getWin(), member.getLose());
-//        model.addAttribute("member", memberDto);
-//        return "game/gameBlack";
-//    }
-
-    // /game/{gameId} 가 best
     @GetMapping("/game")
     public String gameStart(@RequestParam("gameId") Long gameId,
                             Authentication authentication,
                             Model model) {
-        /**
-         * 1. gameId를 통해서 game 엔티티 조회
-         * 2. authentication 에서 member 엔티티 조회
-         * 3. white 인지 black 인지 검사
-         *
-         */
+        model.addAttribute("gameId", gameId);
+
         Member member = (Member) authentication.getPrincipal();
+        MemberDto member1 = new MemberDto(member.getUsername(), member.getRating(), member.getWin(), member.getLose());
+        model.addAttribute("member1", member1);
 
-        //model 에 담아줄 dto
-        MemberDto memberDto = new MemberDto(member.getUsername(), member.getRating(), member.getWin(), member.getLose());
         Game game = gameService.findById(gameId);
-        String white = game.getWhite();
+        Long time = game.getTime();
 
-        if (member.getUsername().equals(white)) {
+        model.addAttribute("time", game.getTime());
+        String whiteUsername = game.getWhite();
+
+        if (member.getUsername().equals(whiteUsername)) {
+            Member blackMember = memberService.findByUsername(game.getBlack());
+            MemberDto member2 = new MemberDto(blackMember.getUsername(), blackMember.getRating(), blackMember.getWin(), blackMember.getLose());
+
+            model.addAttribute("member2", member2);
             return "game/gameWhite";
+        } else {
+            Member whiteMember = memberService.findByUsername(whiteUsername);
+            MemberDto member2 = new MemberDto(whiteMember.getUsername(), whiteMember.getRating(), whiteMember.getWin(), whiteMember.getLose());
+
+            model.addAttribute("member2", member2);
+            return "game/gameBlack";
         }
-        return "game/gameBlack";
     }
-
-    // game?gameId=1&color=black&time=15
-    // game?gameId=1&color=white&time=15
-
 
     @GetMapping("/lobby")
     public String lobby(Authentication authentication, Model model) {
@@ -77,9 +62,4 @@ public class GameController {
         model.addAttribute("member", memberDto);
         return "lobby";
     }
-
-//    @GetMapping("/ranking")
-//    public String ranking() {
-//        return "game/lobby";
-//    }
 }

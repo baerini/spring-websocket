@@ -1,11 +1,8 @@
 package com.example.springwebsocket.utils;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Header;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
-import java.time.Duration;
 import java.util.Date;
 
 public class JwtUtil {
